@@ -1,15 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
-using UnityEngine.UIElements;
 
 public class LevelGenerator : MonoBehaviour
 {
+    [Header("References")]
+    [SerializeField] CameraController cameraController;
     [SerializeField] GameObject chunkPrefab;
-    [SerializeField] int startingChunksAmount = 12;
     [SerializeField] Transform chunkParent;
+
+    [Header("Level Settings")]
+    [SerializeField] int startingChunksAmount = 12;
     [SerializeField] float chunkLength = 10f;
     [SerializeField] float moveSpeed = 8f;
+    [SerializeField] float minmoveSpeed = 2f;
+    [SerializeField] float maxmoveSpeed = 20f;
+    [SerializeField] float minGravityZ = -22f;
+    [SerializeField] float maxGravityZ = -2f;
 
     // GameObject[] chunks = new GameObject[12];
     List<GameObject> chunks = new List<GameObject>();
@@ -24,6 +30,26 @@ public class LevelGenerator : MonoBehaviour
         moveChunk();
     }
 
+    public void ChangeChunkMoveSpeed(float speedAmount)
+    {
+        float newMoveSpeed = moveSpeed + speedAmount;
+        newMoveSpeed = Mathf.Clamp(newMoveSpeed, minmoveSpeed, maxmoveSpeed);
+
+        if (newMoveSpeed != moveSpeed)
+        {
+            moveSpeed = newMoveSpeed;
+
+            float newGravityZ = Physics.gravity.z - speedAmount;
+            newGravityZ = Mathf.Clamp(newGravityZ, minGravityZ, maxGravityZ);
+
+            Physics.gravity = new Vector3(Physics.gravity.x, Physics.gravity.y, newGravityZ);
+
+            cameraController.ChangeCameraFOV(speedAmount);
+        }
+
+
+    }
+
     void SpawnStartingChunks()
     {
         for (int i = 0; i < startingChunksAmount; i++)
@@ -32,7 +58,7 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    private void SpawnChunk()
+    void SpawnChunk()
     {
         float spawnpositionZ = CalculateSpawnPositionZ();
 
@@ -42,7 +68,7 @@ public class LevelGenerator : MonoBehaviour
         chunks.Add(newChunk);
     }
 
-    private float CalculateSpawnPositionZ()
+    float CalculateSpawnPositionZ()
     {
         float spawnpositionZ;
 
